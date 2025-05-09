@@ -1,0 +1,110 @@
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import TeacherPhoto from "../Photos/TeacherPhoto.jpg";
+import Logo from "../Photos/Logo.jpg";
+import { FaBell, FaChevronDown } from "react-icons/fa";
+
+const TeacherDetailsPage = () => {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const teacher = {
+    firstName: "Chisomo",
+    lastName: "Mwale",
+    middleName: " ",
+    joiningDate: "10th September, 2021",
+    classAssigned: "2",
+    subject: "Mathematics",
+    contact: "+265997362876",
+    photo: TeacherPhoto,
+  };
+
+  return (
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <aside className="w-64 bg-indigo-700 text-white p-6 space-y-6">
+        <div className="flex flex-col items-center">
+          <div className="border rounded-full w-[100px] h-[100px] border-white overflow-hidden">
+            <img src={Logo} alt="Logo" className="w-full h-full object-cover" />
+          </div>
+          <h1 className="text-lg font-semibold mt-2">Thando Academy</h1>
+        </div>
+        <nav className="space-y-9 mt-6">
+          <Link to="/" className="block w-full text-left hover:text-indigo-300 font-semibold">Dashboard</Link>
+          <Link to="/studentpage" className="block w-full text-left hover:text-indigo-300">Students</Link>
+          <Link to="/attendance" className="block w-full text-left hover:text-indigo-300">Attendance</Link>
+          <Link to="/grades" className="block w-full text-left hover:text-indigo-300">Grades</Link>
+          <Link to="/performance" className="block w-full text-left hover:text-indigo-300">Performance</Link>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 p-6 bg-gray-100">
+        {/* Header */}
+        <header className="flex justify-between items-center mb-6 relative">
+          <h2 className="text-xl font-bold">Teacher Dashboard</h2>
+          <div className="relative">
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+            >
+              <img
+                src={TeacherPhoto}
+                alt="Teacher"
+                className="w-10 h-10 rounded-full object-cover border border-indigo-700"
+              />
+              <span className="ml-2">Mr. Chisomo Mwale</span>
+              <FaChevronDown
+                className={`text-indigo-700 transition-transform duration-200 ${
+                  dropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+              <FaBell className="text-indigo-700 ml-3" />
+            </div>
+
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-50">
+                <Link
+                  to="/teacherdetails"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  Teacher Details
+                </Link>
+                <Link
+                  to="/login"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  Logout
+                </Link>
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* Teacher Details Card */}
+        <section className="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl mx-auto">
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800">Teacher Details</h2>
+          <div className="flex gap-10">
+            <img
+              src={teacher.photo}
+              alt="Teacher"
+              className="w-36 h-36 object-cover rounded-md border border-gray-300"
+            />
+            <div className="space-y-3 text-gray-700 text-lg">
+              <p><strong>First Name:</strong> {teacher.firstName}</p>
+              <p><strong>Last Name:</strong> {teacher.lastName}</p>
+              <p><strong>Middle Name:</strong> {teacher.middleName}</p>
+              <p><strong>Joining Date:</strong> {teacher.joiningDate}</p>
+              <p><strong>Class Assigned:</strong> {teacher.classAssigned}</p>
+              <p><strong>Subject:</strong> {teacher.subject}</p>
+              <p><strong>Contact:</strong> {teacher.contact}</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+};
+
+export default TeacherDetailsPage;

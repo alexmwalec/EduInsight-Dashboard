@@ -130,9 +130,9 @@ const TeacherSignUp = () => {
             Sign Up
           </button>
           
-          <div className="text-black mt-4 text-left">
+          <div className="text-white  mt-4 text-left">
             Already have an account? {' '}
-            <Link to="/login" className="text-indigo-600 hover:text-indigo-800 font-medium">
+            <Link to="/login" className="text-white-500 hover:text-indigo-800 font-medium">
               Log In
             </Link>
           </div>

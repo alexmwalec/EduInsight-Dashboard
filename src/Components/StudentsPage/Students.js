@@ -1,27 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import TeacherPhoto from "../Photos/TeacherPhoto.jpg";
 import Logo from "../Photos/Logo.jpg";
 import { FaBell, FaSearch, FaChevronDown } from "react-icons/fa";
 
-const studentList = [
-  { name: "Chisomo Mwale", sex: "M", class: "2", parent: "Alex Mwale", contact: "0992736482" },
-  { name: "Jane Zikama", sex: "F", class: "2", parent: "Wongani Chiwaya", contact: "0882938292" },
-  { name: "Gabriel Moyo", sex: "M", class: "2", parent: "Gift Moyo", contact: "0973827536" },
-  { name: "Bertha Phiri", sex: "F", class: "2", parent: "Allan Phiri", contact: "0886327235" },
-  { name: "Thando Chakoma", sex: "M", class: "2", parent: "Loyd Chakoma", contact: "0836529466" },
-  { name: "Doreen Chipasula", sex: "F", class: "2", parent: "Meke Chipasula", contact: "0987635089" },
-  { name: "Yamikan Gondwe", sex: "M", class: "2", parent: "Chifundo Gondwe", contact: "0883764085" },
-  { name: "Stasha Namaro", sex: "F", class: "2", parent: "Chifundo Gondwe", contact: "0997908574" },
-  { name: "James Phiri", sex: "M", class: "2", parent: "Linda Phiri", contact: "0991234567" },
-  { name: "Lilian Banda", sex: "F", class: "2", parent: "Benson Banda", contact: "0887654321" },
-  { name: "Blessings Mussa", sex: "M", class: "2", parent: "Hope Mussa", contact: "0978901234" },
-  { name: "Victoria Kumwenda", sex: "F", class: "2", parent: "John Kumwenda", contact: "0889012345" },
-];
-
 const StudentPage = () => {
+  const [studentList, setStudentList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState(false); 
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Fetch students from backend
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/students");
+      const data = await res.json();
+      setStudentList(data);
+    } catch (err) {
+      console.error("Failed to fetch students:", err);
+    }
+  };
+
+  const handleAddStudent = async (e) => {
+    e.preventDefault();
+    const newStudent = {
+      name: e.target.name.value,
+      sex: e.target.sex.value,
+      class_assigned: e.target.class_assigned.value,
+      parent: e.target.parent.value,
+      contact: e.target.contact.value,
+    };
+    try {
+      const res = await fetch("http://localhost:5000/api/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newStudent),
+      });
+      if (res.ok) {
+        e.target.reset();
+        fetchStudents(); // Refresh the student list
+      } else {
+        console.error("Failed to add student.");
+      }
+    } catch (err) {
+      console.error("Failed to add student:", err);
+    }
+  };
 
   const filteredStudents = studentList.filter((student) =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -46,8 +73,10 @@ const StudentPage = () => {
         </nav>
       </aside>
 
+      {/* Main content */}
       <main className="flex-1 p-6 bg-gray-100">
-      <header className="flex justify-between items-center mb-6 relative">
+        {/* Header */}
+        <header className="flex justify-between items-center mb-6 relative">
           <h2 className="text-xl font-bold">Teacher Dashboard</h2>
           <div className="relative">
             <div
@@ -61,33 +90,18 @@ const StudentPage = () => {
               />
               <span className="ml-2">Mr. Chisomo Mwale</span>
               <FaChevronDown
-                className={`text-indigo-700 transition-transform duration-200 ${
-                  dropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`text-indigo-700 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
               />
               <FaBell className="text-indigo-700 ml-3" />
             </div>
 
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-50">
-                <Link
-                  to="/teacherdetails"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  onClick={() => setDropdownOpen(false)}
-                >
-                  Teacher Details
-                </Link>
-                <Link
-                  to="/login"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  onClick={() => setDropdownOpen(false)}
-                >
-                  Logout
-                </Link>
+                <Link to="/teacherdetails" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setDropdownOpen(false)}>Teacher Details</Link>
+                <Link to="/login" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setDropdownOpen(false)}>Logout</Link>
               </div>
             )}
           </div>
-      
         </header>
 
         {/* Search Input */}
@@ -104,14 +118,25 @@ const StudentPage = () => {
           />
         </div>
 
+        {/* Add Student Form */}
+        <div className="bg-white p-4 rounded shadow mb-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">Add New Student</h2>
+          <form onSubmit={handleAddStudent} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input name="name" type="text" placeholder="Full Name" required className="border px-3 py-2 rounded" />
+            <select name="sex" required className="border px-3 py-2 rounded">
+              <option value="">Sex</option>
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+            </select>
+            <input name="class_assigned" type="text" placeholder="Class" required className="border px-3 py-2 rounded" />
+            <input name="parent" type="text" placeholder="Parent's Name" required className="border px-3 py-2 rounded" />
+            <input name="contact" type="text" placeholder="Parent Contact" required className="border px-3 py-2 rounded" />
+            <button type="submit" className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded hover:bg-indigo-700 col-span-full md:col-auto">Add Student</button>
+          </form>
+        </div>
+
         {/* Students Table */}
-        <div
-          className="bg-white p-6 rounded shadow w-full max-h-[500px] overflow-y-auto"
-          style={{
-            scrollbarWidth: "thin",
-            scrollbarColor: "#3b82f6 transparent",
-          }}
-        >
+        <div className="bg-white p-6 rounded shadow w-full max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#3b82f6 transparent" }}>
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Students Data</h2>
           <table className="min-w-full border border-gray-200 text-sm">
             <thead className="bg-indigo-100 text-indigo-800 sticky top-0 z-10">
@@ -128,16 +153,14 @@ const StudentPage = () => {
                 <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-gray-100"}>
                   <td className="px-4 py-2 font-medium">{student.name}</td>
                   <td className="px-4 py-2">{student.sex}</td>
-                  <td className="px-4 py-2">{student.class}</td>
+                  <td className="px-4 py-2">{student.class_assigned}</td>
                   <td className="px-4 py-2">{student.parent}</td>
                   <td className="px-4 py-2">{student.contact}</td>
                 </tr>
               ))}
               {filteredStudents.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="px-4 py-3 text-center text-gray-500">
-                    No student found.
-                  </td>
+                  <td colSpan="5" className="px-4 py-3 text-center text-gray-500">No student found.</td>
                 </tr>
               )}
             </tbody>

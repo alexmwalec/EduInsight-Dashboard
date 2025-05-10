@@ -1,46 +1,64 @@
 import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import Logo from "../Photos/Logo.jpg";
-import { Link } from "react-router-dom";
 
 const TeacherSignUp = () => {
   const [fullName, setFullName] = useState('');
-  const [emailOrPhone, setEmailOrPhone] = useState('');
   const [subject, setSubject] = useState('');
   const [classAssigned, setClassAssigned] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSignUp = (e) => {
+  const navigate = useNavigate(); // ✅ for redirecting after success
+
+  const handleSignUp = async (e) => {
     e.preventDefault();
-    
-    // Validation
+
     if (password !== confirmPassword) {
       setError("Passwords don't match");
       return;
     }
-    
+
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
       return;
     }
 
-   
-    const newTeacher = {
-      fullName,
-      emailOrPhone,
-      subject,
-      classAssigned,
-      password,
-      createdAt: new Date().toISOString()
-    };
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          full_name: fullName,
+          class_assigned: classAssigned,
+          subject: subject,
+          password,
+        }),
+      });
 
-    // Save to localStorage (in a real app, you would send to a backend)
-    const existingTeachers = JSON.parse(localStorage.getItem('teachers')) || [];
-    localStorage.setItem('teachers', JSON.stringify([...existingTeachers, newTeacher]));
-    
-    alert('Account created successfully!');
-    
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message);
+        // Clear inputs
+        setFullName("");
+        setClassAssigned("");
+        setSubject("");
+        setPassword("");
+        setConfirmPassword("");
+        setError("");
+        // ✅ Redirect to login
+        navigate("/login");
+      } else {
+        setError(data.message || "Signup failed");
+      }
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError("Server error, try again later");
+    }
   };
 
   return (
@@ -61,7 +79,7 @@ const TeacherSignUp = () => {
             Education Dashboard<br/>
           </h1>
         </div>
-        
+
         {error && (
           <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-md text-sm">
             {error}
@@ -77,16 +95,7 @@ const TeacherSignUp = () => {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
           />
-          
-          <input
-            type="text"
-            placeholder="Email or Phone Number*"
-            required
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            value={emailOrPhone}
-            onChange={(e) => setEmailOrPhone(e.target.value)}
-          />
-          
+
           <input
             type="text"
             placeholder="Subject You Teach*"
@@ -95,7 +104,7 @@ const TeacherSignUp = () => {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
           />
-          
+
           <input
             type="text"
             placeholder="Assigned Class*"
@@ -104,7 +113,7 @@ const TeacherSignUp = () => {
             value={classAssigned}
             onChange={(e) => setClassAssigned(e.target.value)}
           />
-          
+
           <input
             type="password"
             placeholder="Password* (min 6 characters)"
@@ -113,7 +122,7 @@ const TeacherSignUp = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          
+
           <input
             type="password"
             placeholder="Confirm Password*"
@@ -122,17 +131,17 @@ const TeacherSignUp = () => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
-          
+
           <button
             type="submit"
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition"
           >
             Sign Up
           </button>
-          
-          <div className="text-white  mt-4 text-left">
-            Already have an account? {' '}
-            <Link to="/login" className="text-white-500 hover:text-indigo-800 font-medium">
+
+          <div className="text-black mt-4 text-left">
+            Already have an account?{" "}
+            <Link to="/login" className="text-indigo-600 hover:text-indigo-800 font-medium">
               Log In
             </Link>
           </div>

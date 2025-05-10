@@ -1,15 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import TeacherPhoto from "../Photos/TeacherPhoto.jpg";
 import StudentPieChart from "../StudentPieChart/StudentPieChart";
 import Logo from "../Photos/Logo.jpg";
 import PerformanceChart from "../PerformanceChart/PerformanceChart";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaUser, FaBell, FaChevronDown } from "react-icons/fa";
 
 const TeacherDashboard = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [teacher, setTeacher] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedTeacher = localStorage.getItem("teacher");
+    if (storedTeacher) {
+      setTeacher(JSON.parse(storedTeacher));
+    }
+  }, []);
 
   const studentsWithDisabilities = ["Linda Banda", "Peter Zulu"];
 
@@ -27,6 +36,18 @@ const TeacherDashboard = () => {
     { label: "Number of Girls", count: 25, color: "text-pink-500", type: "girls" },
     { label: "Students with Disabilities", count: 2, color: "text-red-500", type: "disabilities" }
   ];
+
+  const getLastName = () => {
+    if (!teacher) return "";
+    const parts = teacher.full_name.trim().split(" ");
+    return parts.length > 1 ? parts[parts.length - 1] : teacher.full_name;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("teacher");
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -59,7 +80,9 @@ const TeacherDashboard = () => {
                 alt="Teacher"
                 className="w-10 h-10 rounded-full object-cover border border-indigo-700"
               />
-              <span className="ml-2">Mr. Chisomo Mwale</span>
+              <span className="ml-2">
+                {teacher ? `Mr. ${getLastName()}` : "Loading..."}
+              </span>
               <FaChevronDown
                 className={`text-indigo-700 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
               />
@@ -75,13 +98,12 @@ const TeacherDashboard = () => {
                 >
                   Teacher Details
                 </Link>
-                <Link
-                  to="/login"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  onClick={() => setDropdownOpen(false)}
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
                 >
                   Logout
-                </Link>
+                </button>
               </div>
             )}
           </div>
@@ -160,7 +182,7 @@ const TeacherDashboard = () => {
                 </ul>
               ) : (
                 <p className="text-sm text-gray-600">
-                 {selectedCard.label.toLowerCase()}.
+                  {selectedCard.label.toLowerCase()}.
                 </p>
               )}
             </div>

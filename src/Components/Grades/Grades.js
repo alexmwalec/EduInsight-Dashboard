@@ -111,7 +111,7 @@ const GradePage = () => {
 
         {/* Grade Entry Section */}
         <section className="bg-white p-4 rounded-2xl shadow mb-8">
-          <h2 className="text-lg font-semibold text-indigo-600 mb-4">Enter Mathematics Grades</h2>
+          <h2 className="text-lg font-semibold text-indigo-600 mb-4">Grades Section</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input
               type="text"

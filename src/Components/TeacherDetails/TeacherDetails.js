@@ -1,21 +1,31 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import TeacherPhoto from "../Photos/TeacherPhoto.jpg";
 import Logo from "../Photos/Logo.jpg";
 import { FaBell, FaChevronDown } from "react-icons/fa";
 
 const TeacherDetailsPage = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [teacher, setTeacher] = useState(null);
+  const navigate = useNavigate();
 
-  const teacher = {
-    firstName: "Chisomo",
-    lastName: "Mwale",
-    middleName: " ",
-    joiningDate: "10th September, 2021",
-    classAssigned: "2",
-    subject: "Mathematics",
-    contact: "+265997362876",
-    photo: TeacherPhoto,
+  useEffect(() => {
+    const stored = localStorage.getItem("teacher");
+    if (stored) {
+      setTeacher(JSON.parse(stored));
+    }
+  }, []);
+
+  const getLastName = () => {
+    if (!teacher) return "";
+    const parts = teacher.full_name.trim().split(" ");
+    return parts.length > 1 ? parts[parts.length - 1] : teacher.full_name;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("teacher");
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   return (
@@ -52,7 +62,9 @@ const TeacherDetailsPage = () => {
                 alt="Teacher"
                 className="w-10 h-10 rounded-full object-cover border border-indigo-700"
               />
-              <span className="ml-2">Mr. Chisomo Mwale</span>
+              <span className="ml-2">
+                {teacher ? `Mr. ${getLastName()}` : "Loading..."}
+              </span>
               <FaChevronDown
                 className={`text-indigo-700 transition-transform duration-200 ${
                   dropdownOpen ? "rotate-180" : ""
@@ -70,13 +82,12 @@ const TeacherDetailsPage = () => {
                 >
                   Teacher Details
                 </Link>
-                <Link
-                  to="/login"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  onClick={() => setDropdownOpen(false)}
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
                 >
                   Logout
-                </Link>
+                </button>
               </div>
             )}
           </div>
@@ -85,22 +96,25 @@ const TeacherDetailsPage = () => {
         {/* Teacher Details Card */}
         <section className="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl mx-auto">
           <h2 className="text-2xl font-semibold mb-6 text-gray-800">Teacher Details</h2>
-          <div className="flex gap-10">
-            <img
-              src={teacher.photo}
-              alt="Teacher"
-              className="w-36 h-36 object-cover rounded-md border border-gray-300"
-            />
-            <div className="space-y-3 text-gray-700 text-lg">
-              <p><strong>First Name:</strong> {teacher.firstName}</p>
-              <p><strong>Last Name:</strong> {teacher.lastName}</p>
-              <p><strong>Middle Name:</strong> {teacher.middleName}</p>
-              <p><strong>Joining Date:</strong> {teacher.joiningDate}</p>
-              <p><strong>Class Assigned:</strong> {teacher.classAssigned}</p>
-              <p><strong>Subject:</strong> {teacher.subject}</p>
-              <p><strong>Contact:</strong> {teacher.contact}</p>
+
+          {teacher ? (
+            <div className="flex gap-10">
+              <img
+                src={TeacherPhoto}
+                alt="Teacher"
+                className="w-36 h-36 object-cover rounded-md border border-gray-300"
+              />
+              <div className="space-y-3 text-gray-700 text-lg">
+                <p><strong>Full Name:</strong> {teacher.full_name}</p>
+                <p><strong>Subject:</strong> {teacher.subject}</p>
+                <p><strong>Class Assigned:</strong> {teacher.class_assigned}</p>
+                <p><strong>Joined:</strong> {teacher.created_at ? new Date(teacher.created_at).toDateString() : "Not specified"}</p>
+                <p><strong>Contact:</strong> +265 997 XXX XXX</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <p className="text-gray-600 text-center">Loading teacher data...</p>
+          )}
         </section>
       </main>
     </div>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
-import TeacherPhoto from "../Photos/TeacherPhoto.jpg";
 import StudentPieChart from "../StudentPieChart/StudentPieChart";
 import Logo from "../Photos/Logo.jpg";
 import PerformanceChart from "../PerformanceChart/PerformanceChart";
@@ -11,16 +10,57 @@ const TeacherDashboard = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
   const [teacher, setTeacher] = useState(null);
+  const [studentList, setStudentList] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedTeacher = localStorage.getItem("teacher");
     if (storedTeacher) {
-      setTeacher(JSON.parse(storedTeacher));
+      const parsedTeacher = JSON.parse(storedTeacher);
+      setTeacher(parsedTeacher);
+
+      fetch(`http://localhost:5000/api/students?class_assigned=${encodeURIComponent(parsedTeacher.class_assigned)}`)
+        .then(res => res.json())
+        .then(data => {
+          setStudentList(data);
+        })
+        .catch(err => console.error("Failed to fetch students:", err));
     }
   }, []);
 
-  const studentsWithDisabilities = ["Linda Banda", "Peter Zulu"];
+  const studentsWithDisabilities = studentList.filter(s => s.has_disability === true);
+  const numberOfBoys = studentList.filter(s => s.sex === "M").length;
+  const numberOfGirls = studentList.filter(s => s.sex === "F").length;
+  const totalStudents = studentList.length;
+
+  const stats = [
+    { label: "Total number of students", count: totalStudents, color: "text-indigo-600", type: "total" },
+    { label: "Number of Boys", count: numberOfBoys, color: "text-blue-500", type: "boys" },
+    { label: "Number of Girls", count: numberOfGirls, color: "text-pink-500", type: "girls" },
+    { label: "Students with Disabilities", count: studentsWithDisabilities.length, color: "text-red-500", type: "disabilities" }
+  ];
+
+  const getLastName = () => {
+    if (!teacher) return "";
+    const parts = teacher.full_name.trim().split(" ");
+    return parts.length > 1 ? parts[parts.length - 1] : teacher.full_name;
+  };
+
+  const getInitials = () => {
+    if (!teacher?.full_name) return "";
+    return teacher.full_name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("teacher");
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   const notifications = [
     { date: "10 Feb, 2025", message: "Average class performance in maths dropped by 10% compared to last week." },
@@ -30,38 +70,21 @@ const TeacherDashboard = () => {
     { date: "04 April, 2025", message: "You have not updated attendance for Form 2 for 2 weeks." }
   ];
 
-  const stats = [
-    { label: "Total number of students", count: 52, color: "text-indigo-600", type: "total" },
-    { label: "Number of Boys", count: 27, color: "text-blue-500", type: "boys" },
-    { label: "Number of Girls", count: 25, color: "text-pink-500", type: "girls" },
-    { label: "Students with Disabilities", count: 2, color: "text-red-500", type: "disabilities" }
-  ];
-
-  const getLastName = () => {
-    if (!teacher) return "";
-    const parts = teacher.full_name.trim().split(" ");
-    return parts.length > 1 ? parts[parts.length - 1] : teacher.full_name;
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("teacher");
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 bg-indigo-700 text-white p-7 space-y-8 flex-shrink-0 h-full overflow-y-auto">
-        <div className="border rounded-full w-[110px] h-[110px] border-black overflow-hidden mb-2">
-          <img src={Logo} alt="Logo" className="w-full h-full object-cover" />
+      <aside className="w-64 bg-indigo-700 text-white p-6 space-y-6">
+        <div className="flex flex-col items-center">
+          <div className="border rounded-full w-[100px] h-[100px] border-white overflow-hidden">
+            <img src={Logo} alt="Logo" className="w-full h-full object-cover" />
+          </div>
+          <h1 className="text-lg font-semibold mt-2">Thando Academy</h1>
         </div>
-        <div className="text-center text-2xl font-bold">Thando Academy</div>
         <nav className="space-y-9 mt-6">
-          <button className="block w-full text-left">Dashboard</button>
-          <Link to="/studentpage" className="block w-full pointer:cursor text-left font-medium">Students</Link>
-          <Link to="/attendance" className="block w-full pointer:cursor text-left font-medium">Attendance</Link>
-          <Link to="/grades" className="block w-full text-left hover:text-indigo-300">Grades</Link>
+          <Link to="/" className="block w-full text-left hover:text-indigo-300">Dashboard</Link>
+          <Link to="/studentpage" className="block w-full text-left hover:text-indigo-300">Students</Link>
+          <Link to="/attendance" className="block w-full text-left hover:text-indigo-300">Attendance</Link>
+          <Link to="/grades" className="block w-full text-left hover:text-indigo-300 font-semibold">Grades</Link>
           <Link to="/performance" className="block w-full text-left hover:text-indigo-300">Performance</Link>
         </nav>
       </aside>
@@ -75,11 +98,17 @@ const TeacherDashboard = () => {
               className="flex items-center gap-2 cursor-pointer"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
-              <img
-                src={TeacherPhoto}
-                alt="Teacher"
-                className="w-10 h-10 rounded-full object-cover border border-indigo-700"
-              />
+              {teacher?.profile_image_url ? (
+                <img
+                  src={teacher.profile_image_url}
+                  alt="Teacher"
+                  className="w-10 h-10 rounded-full object-cover border border-indigo-700"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-indigo-700 text-white flex items-center justify-center text-sm font-semibold border border-indigo-700">
+                  {getInitials()}
+                </div>
+              )}
               <span className="ml-2">
                 {teacher ? `Mr. ${getLastName()}` : "Loading..."}
               </span>
@@ -109,7 +138,7 @@ const TeacherDashboard = () => {
           </div>
         </header>
 
-        {/* Top Stats - Clickable Cards */}
+        {/* Top Stats */}
         <section className="grid grid-cols-4 gap-4 mb-6">
           {stats.map((card, idx) => (
             <div
@@ -129,7 +158,7 @@ const TeacherDashboard = () => {
           <div className="bg-white p-4 rounded shadow">
             <h3 className="font-semibold mb-2 text-indigo-700">Students</h3>
             <div className="h-48">
-              <StudentPieChart boys={27} girls={25} />
+              <StudentPieChart boys={numberOfBoys} girls={numberOfGirls} />
             </div>
           </div>
 
@@ -161,7 +190,7 @@ const TeacherDashboard = () => {
           </div>
         </section>
 
-        {/* Modal Popup */}
+        {/* Modal */}
         {selectedCard && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded shadow-lg w-[320px] text-center relative">
@@ -176,8 +205,8 @@ const TeacherDashboard = () => {
 
               {selectedCard.type === "disabilities" ? (
                 <ul className="text-left text-sm text-gray-700 list-disc list-inside">
-                  {studentsWithDisabilities.map((name, i) => (
-                    <li key={i}>{name}</li>
+                  {studentsWithDisabilities.map((student, i) => (
+                    <li key={i}>{student.name}</li>
                   ))}
                 </ul>
               ) : (

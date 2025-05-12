@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import TeacherPhoto from "../Photos/TeacherPhoto.jpg"
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FaBell, FaChevronDown } from "react-icons/fa";
 import Logo from "../Photos/Logo.jpg";
 
@@ -10,6 +9,33 @@ const GradePage = () => {
   const [editIndex, setEditIndex] = useState(null);
   const [editForm, setEditForm] = useState({ name: "", score: "" });
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [teacher, setTeacher] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedTeacher = localStorage.getItem("teacher");
+    if (storedTeacher) {
+      setTeacher(JSON.parse(storedTeacher));
+    }
+  }, []);
+
+  const getLastName = () => {
+    if (!teacher) return "";
+    const parts = teacher.full_name.trim().split(" ");
+    return parts.length > 1 ? parts[parts.length - 1] : teacher.full_name;
+  };
+
+  const getInitials = () => {
+    if (!teacher) return "";
+    const parts = teacher.full_name.trim().split(" ");
+    return parts.map(p => p[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("teacher");
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -66,7 +92,6 @@ const GradePage = () => {
 
       {/* Main Content */}
       <main className="flex-1 p-6 bg-gray-100">
-        {/* Header */}
         <header className="flex justify-between items-center mb-6 relative">
           <h2 className="text-xl font-bold">Teacher Dashboard</h2>
           <div className="relative">
@@ -74,16 +99,16 @@ const GradePage = () => {
               className="flex items-center gap-2 cursor-pointer"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
-              <img
-                src={TeacherPhoto}
-                alt="Teacher"
-                className="w-10 h-10 rounded-full object-cover border border-indigo-700"
-              />
-              <span className="ml-2">Mr. Chisomo Mwale</span>
+              <div
+                className="w-10 h-10 rounded-full text-white flex items-center justify-center font-bold bg-indigo-700"
+              >
+                {teacher ? getInitials() : "?"}
+              </div>
+              <span className="ml-2">
+                {teacher ? `Mr. ${getLastName()}` : "Loading..."}
+              </span>
               <FaChevronDown
-                className={`text-indigo-700 transition-transform duration-200 ${
-                  dropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`text-indigo-700 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
               />
               <FaBell className="text-indigo-700 ml-3" />
             </div>
@@ -97,13 +122,12 @@ const GradePage = () => {
                 >
                   Teacher Details
                 </Link>
-                <Link
-                  to="/login"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  onClick={() => setDropdownOpen(false)}
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
                 >
                   Logout
-                </Link>
+                </button>
               </div>
             )}
           </div>

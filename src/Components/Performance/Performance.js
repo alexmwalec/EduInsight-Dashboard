@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Logo from "../Photos/Logo.jpg";
-import TeacherPhoto from "../Photos/TeacherPhoto.jpg"
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaBell, FaChevronDown } from "react-icons/fa";
 import {
   Chart as ChartJS,
@@ -51,44 +50,83 @@ const barData = {
 };
 
 const PerformancePage = () => {
-  const [dropdownOpen, setDropdownOpen] = useState(false); // ✅ Moved inside component
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [teacher, setTeacher] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedTeacher = localStorage.getItem("teacher");
+    if (storedTeacher) {
+      setTeacher(JSON.parse(storedTeacher));
+    }
+  }, []);
+
+  const getLastName = () => {
+    if (!teacher) return "";
+    const parts = teacher.full_name.trim().split(" ");
+    return parts.length > 1 ? parts[parts.length - 1] : teacher.full_name;
+  };
+
+  const getInitials = () => {
+    if (!teacher?.full_name) return "";
+    return teacher.full_name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("teacher");
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-indigo-700 text-white p-7 space-y-6">
-        <div className="border rounded-full w-[110px] h-[110px] border-white overflow-hidden mb-2 mx-auto">
-          <img src={Logo} alt="Logo" className="w-full h-full object-cover" />
+      <aside className="w-64 bg-indigo-700 text-white p-6 space-y-6">
+        <div className="flex flex-col items-center">
+          <div className="border rounded-full w-[100px] h-[100px] border-white overflow-hidden">
+            <img src={Logo} alt="Logo" className="w-full h-full object-cover" />
+          </div>
+          <h1 className="text-lg font-semibold mt-2">Thando Academy</h1>
         </div>
-        <div className="text-center text-2xl font-bold">Thando Academy</div>
-        <nav className="space-y-6 mt-6">
-          <Link to="/" className="block w-full text-left hover:text-indigo-200">Dashboard</Link>
-          <Link to="/studentpage" className="block w-full text-left hover:text-indigo-200">Students</Link>
-          <Link to="/attendance" className="block w-full text-left hover:text-indigo-200">Attendance</Link>
-          <Link to="/grades" className="block w-full text-left hover:text-indigo-200">Grades</Link>
-          <Link to="/performance" className="block w-full text-left font-semibold text-white">Performance</Link>
+        <nav className="space-y-9 mt-6">
+          <Link to="/" className="block w-full text-left hover:text-indigo-300">Dashboard</Link>
+          <Link to="/studentpage" className="block w-full text-left hover:text-indigo-300">Students</Link>
+          <Link to="/attendance" className="block w-full text-left hover:text-indigo-300">Attendance</Link>
+          <Link to="/grades" className="block w-full text-left hover:text-indigo-300 font-semibold">Grades</Link>
+          <Link to="/performance" className="block w-full text-left hover:text-indigo-300">Performance</Link>
         </nav>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 p-6 bg-gray-100">
-      <header className="flex justify-between items-center mb-6 relative">
+        <header className="flex justify-between items-center mb-6 relative">
           <h2 className="text-xl font-bold">Teacher Dashboard</h2>
           <div className="relative">
             <div
               className="flex items-center gap-2 cursor-pointer"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
-              <img
-                src={TeacherPhoto}
-                alt="Teacher"
-                className="w-10 h-10 rounded-full object-cover border border-indigo-700"
-              />
-              <span className="ml-2">Mr. Chisomo Mwale</span>
+              {teacher?.profile_image_url ? (
+                <img
+                  src={teacher.profile_image_url}
+                  alt="Teacher"
+                  className="w-10 h-10 rounded-full object-cover border border-indigo-700"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-indigo-700 text-white flex items-center justify-center text-sm font-semibold border border-indigo-700">
+                  {getInitials()}
+                </div>
+              )}
+              <span className="ml-2">
+                {teacher ? `Mr. ${getLastName()}` : "Loading..."}
+              </span>
               <FaChevronDown
-                className={`text-indigo-700 transition-transform duration-200 ${
-                  dropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`text-indigo-700 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
               />
               <FaBell className="text-indigo-700 ml-3" />
             </div>
@@ -102,17 +140,17 @@ const PerformancePage = () => {
                 >
                   Teacher Details
                 </Link>
-                <Link
-                  to="/login"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  onClick={() => setDropdownOpen(false)}
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
                 >
                   Logout
-                </Link>
+                </button>
               </div>
             )}
           </div>
         </header>
+
         {/* Charts Section */}
         <div className="bg-white p-6 rounded-xl shadow">
           <h2 className="text-2xl font-bold text-indigo-700 mb-6">Performance Overview</h2>

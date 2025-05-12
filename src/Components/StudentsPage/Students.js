@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import TeacherPhoto from "../Photos/TeacherPhoto.jpg";
 import Logo from "../Photos/Logo.jpg";
 import { FaBell, FaSearch, FaChevronDown } from "react-icons/fa";
@@ -8,15 +8,26 @@ const StudentPage = () => {
   const [studentList, setStudentList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [teacher, setTeacher] = useState(null);
+  const navigate = useNavigate();
 
-  // Fetch students from backend
+  // Get teacher from localStorage
   useEffect(() => {
-    fetchStudents();
+    const storedTeacher = localStorage.getItem("teacher");
+    if (storedTeacher) {
+      setTeacher(JSON.parse(storedTeacher));
+    }
   }, []);
+
+  useEffect(() => {
+    if (teacher) fetchStudents();
+  }, [teacher]);
 
   const fetchStudents = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/students");
+      const res = await fetch(
+        `http://localhost:5000/api/students?class_assigned=${encodeURIComponent(teacher.class_assigned)}`
+      );
       const data = await res.json();
       setStudentList(data);
     } catch (err) {
@@ -26,28 +37,43 @@ const StudentPage = () => {
 
   const handleAddStudent = async (e) => {
     e.preventDefault();
+    if (!teacher) return;
+
     const newStudent = {
       name: e.target.name.value,
       sex: e.target.sex.value,
-      class_assigned: e.target.class_assigned.value,
+      class_assigned: teacher.class_assigned,
       parent: e.target.parent.value,
       contact: e.target.contact.value,
     };
+
     try {
       const res = await fetch("http://localhost:5000/api/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newStudent),
       });
+
       if (res.ok) {
         e.target.reset();
-        fetchStudents(); // Refresh the student list
+        fetchStudents();
       } else {
-        console.error("Failed to add student.");
+        console.error("Server error while adding student.");
       }
     } catch (err) {
-      console.error("Failed to add student:", err);
+      console.error("Add student error:", err);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("teacher");
+    navigate("/login");
+  };
+
+  const getLastName = () => {
+    if (!teacher?.full_name) return "";
+    const parts = teacher.full_name.trim().split(" ");
+    return parts.length > 1 ? parts[parts.length - 1] : parts[0];
   };
 
   const filteredStudents = studentList.filter((student) =>
@@ -73,7 +99,7 @@ const StudentPage = () => {
         </nav>
       </aside>
 
-      {/* Main content */}
+      {/* Main */}
       <main className="flex-1 p-6 bg-gray-100">
         {/* Header */}
         <header className="flex justify-between items-center mb-6 relative">
@@ -88,7 +114,9 @@ const StudentPage = () => {
                 alt="Teacher"
                 className="w-10 h-10 rounded-full object-cover border border-indigo-700"
               />
-              <span className="ml-2">Mr. Chisomo Mwale</span>
+              <span className="ml-2">
+                {teacher ? `Mr. ${getLastName()}` : "Loading..."}
+              </span>
               <FaChevronDown
                 className={`text-indigo-700 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
               />
@@ -97,8 +125,19 @@ const StudentPage = () => {
 
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-50">
-                <Link to="/teacherdetails" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setDropdownOpen(false)}>Teacher Details</Link>
-                <Link to="/login" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setDropdownOpen(false)}>Logout</Link>
+                <Link
+                  to="/teacherdetails"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  Teacher Details
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                >
+                  Logout
+                </button>
               </div>
             )}
           </div>
@@ -128,10 +167,19 @@ const StudentPage = () => {
               <option value="M">Male</option>
               <option value="F">Female</option>
             </select>
-            <input name="class_assigned" type="text" placeholder="Class" required className="border px-3 py-2 rounded" />
+            <input
+              name="class_assigned"
+              type="text"
+              value={teacher?.class_assigned || ""}
+              readOnly
+              className="border px-3 py-2 rounded bg-gray-100 text-gray-600 cursor-not-allowed"
+              title="This class is assigned automatically"
+            />
             <input name="parent" type="text" placeholder="Parent's Name" required className="border px-3 py-2 rounded" />
             <input name="contact" type="text" placeholder="Parent Contact" required className="border px-3 py-2 rounded" />
-            <button type="submit" className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded hover:bg-indigo-700 col-span-full md:col-auto">Add Student</button>
+            <button type="submit" className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded hover:bg-indigo-700 col-span-full md:col-auto">
+              Add Student
+            </button>
           </form>
         </div>
 
@@ -160,7 +208,9 @@ const StudentPage = () => {
               ))}
               {filteredStudents.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="px-4 py-3 text-center text-gray-500">No student found.</td>
+                  <td colSpan="5" className="px-4 py-3 text-center text-gray-500">
+                    No student found.
+                  </td>
                 </tr>
               )}
             </tbody>

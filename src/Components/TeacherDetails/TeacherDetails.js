@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import TeacherPhoto from "../Photos/TeacherPhoto.jpg";
 import Logo from "../Photos/Logo.jpg";
 import { FaBell, FaChevronDown } from "react-icons/fa";
 
@@ -22,6 +21,12 @@ const TeacherDetailsPage = () => {
     return parts.length > 1 ? parts[parts.length - 1] : teacher.full_name;
   };
 
+  const getInitials = () => {
+    if (!teacher) return "";
+    const parts = teacher.full_name.trim().split(" ");
+    return parts.map(p => p[0]).join("").toUpperCase();
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("teacher");
     localStorage.removeItem("token");
@@ -29,7 +34,7 @@ const TeacherDetailsPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
       <aside className="w-64 bg-indigo-700 text-white p-6 space-y-6">
         <div className="flex flex-col items-center">
@@ -57,18 +62,24 @@ const TeacherDetailsPage = () => {
               className="flex items-center gap-2 cursor-pointer"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
-              <img
-                src={TeacherPhoto}
-                alt="Teacher"
-                className="w-10 h-10 rounded-full object-cover border border-indigo-700"
-              />
+              {teacher && teacher.photo ? (
+                <img
+                  src={teacher.photo}
+                  alt="Teacher"
+                  className="w-10 h-10 rounded-full object-cover border border-indigo-700"
+                />
+              ) : (
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-700 text-white font-bold"
+                >
+                  {getInitials()}
+                </div>
+              )}
               <span className="ml-2">
                 {teacher ? `Mr. ${getLastName()}` : "Loading..."}
               </span>
               <FaChevronDown
-                className={`text-indigo-700 transition-transform duration-200 ${
-                  dropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`text-indigo-700 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
               />
               <FaBell className="text-indigo-700 ml-3" />
             </div>
@@ -94,16 +105,22 @@ const TeacherDetailsPage = () => {
         </header>
 
         {/* Teacher Details Card */}
-        <section className="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl mx-auto">
+        <section className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-4xl mx-auto">
           <h2 className="text-2xl font-semibold mb-6 text-gray-800">Teacher Details</h2>
 
           {teacher ? (
             <div className="flex gap-10">
-              <img
-                src={TeacherPhoto}
-                alt="Teacher"
-                className="w-36 h-36 object-cover rounded-md border border-gray-300"
-              />
+              {teacher.photo ? (
+                <img
+                  src={teacher.photo}
+                  alt="Teacher"
+                  className="w-36 h-36 object-cover rounded-md border border-gray-300"
+                />
+              ) : (
+                <div className="w-36 h-36 bg-gray-300 rounded-md flex items-center justify-center text-gray-600">
+                  <span>Photo Not Available</span>
+                </div>
+              )}
               <div className="space-y-3 text-gray-700 text-lg">
                 <p><strong>Full Name:</strong> {teacher.full_name}</p>
                 <p><strong>Subject:</strong> {teacher.subject}</p>

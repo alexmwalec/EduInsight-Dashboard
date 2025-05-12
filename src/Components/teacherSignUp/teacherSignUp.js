@@ -10,7 +10,7 @@ const TeacherSignUp = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
-  const navigate = useNavigate(); // ✅ for redirecting after success
+  const navigate = useNavigate(); 
 
   const handleSignUp = async (e) => {
     e.preventDefault();

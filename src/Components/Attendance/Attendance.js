@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from "../Photos/Logo.jpg";
-import TeacherPhoto from "../Photos/TeacherPhoto.jpg";
 import { FaChevronDown, FaBell } from "react-icons/fa";
 
 const AttendancePage = () => {
@@ -13,7 +12,21 @@ const AttendancePage = () => {
 
   const teacherInfo = JSON.parse(localStorage.getItem('teacher'));
   const assignedClass = teacherInfo?.class_assigned || '';
-  const teacherName = teacherInfo?.full_name || '';
+  const teacherFullName = teacherInfo?.full_name || '';
+
+  const getLastName = () => {
+    if (!teacherFullName) return "";
+    const parts = teacherFullName.trim().split(/\s+/);
+    return parts.length > 1 ? parts[parts.length - 1] : teacherFullName;
+  };
+
+  const getInitials = () => {
+    if (!teacherFullName) return "";
+    const parts = teacherFullName.trim().split(/\s+/);
+    const first = parts[0]?.[0] || '';
+    const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : '';
+    return (first + last).toUpperCase();
+  };
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -59,47 +72,48 @@ const AttendancePage = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("teacher");
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-indigo-700 text-white p-7">
-        <div className="border rounded-full w-[110px] h-[110px] border-white mx-auto mb-4 overflow-hidden">
-          <img src={Logo} alt="Logo" className="w-full h-full object-cover" />
+      <aside className="w-64 bg-indigo-700 text-white p-6 space-y-6">
+        <div className="flex flex-col items-center">
+          <div className="border rounded-full w-[100px] h-[100px] border-white overflow-hidden">
+            <img src={Logo} alt="Logo" className="w-full h-full object-cover" />
+          </div>
+          <h1 className="text-lg font-semibold mt-2">Thando Academy</h1>
         </div>
-        <h1 className="text-center text-xl font-bold">Thando Academy</h1>
-        <nav className="mt-6 space-y-5">
-          <Link to="/" className="block hover:text-indigo-200">Dashboard</Link>
-          <Link to="/studentpage" className="block hover:text-indigo-200">Students</Link>
-          <Link to="/attendance" className="block font-semibold">Attendance</Link>
-          <Link to="/grades" className="block hover:text-indigo-200">Grades</Link>
-          <Link to="/performance" className="block hover:text-indigo-200">Performance</Link>
+        <nav className="space-y-9 mt-6">
+          <Link to="/" className="block w-full text-left hover:text-indigo-300">Dashboard</Link>
+          <Link to="/studentpage" className="block w-full text-left hover:text-indigo-300">Students</Link>
+          <Link to="/attendance" className="block w-full text-left hover:text-indigo-300">Attendance</Link>
+          <Link to="/grades" className="block w-full text-left hover:text-indigo-300 font-semibold">Grades</Link>
+          <Link to="/performance" className="block w-full text-left hover:text-indigo-300">Performance</Link>
         </nav>
       </aside>
 
-      {/* Main */}
+      {/* Main Content */}
       <main className="flex-1 p-6 bg-gray-100">
         <header className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Teacher Dashboard</h2>
           <div className="relative">
             <div onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2 cursor-pointer">
-              <img src={TeacherPhoto} alt="Teacher" className="w-10 h-10 rounded-full border border-indigo-700" />
-              <span>{teacherName}</span>
+              <div className="w-10 h-10 rounded-full bg-indigo-700 text-white flex items-center justify-center font-bold">
+                {getInitials()}
+              </div>
+              <span>Mr. {getLastName()}</span>
               <FaChevronDown className="text-indigo-700" />
               <FaBell className="text-indigo-700 ml-2" />
             </div>
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded z-50">
                 <Link to="/teacherdetails" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Teacher Details</Link>
-                <button
-                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  onClick={() => {
-                    localStorage.removeItem("teacher");
-                    localStorage.removeItem("token");
-                    navigate("/login");
-                  }}
-                >
-                  Logout
-                </button>
+                <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Logout</button>
               </div>
             )}
           </div>

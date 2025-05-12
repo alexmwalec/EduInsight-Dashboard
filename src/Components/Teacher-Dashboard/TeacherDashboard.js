@@ -5,7 +5,13 @@ import Logo from "../Photos/Logo.jpg";
 import PerformanceChart from "../PerformanceChart/PerformanceChart";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUser, FaBell, FaChevronDown } from "react-icons/fa";
-
+import {
+  FaHome,
+  FaUserGraduate,
+  FaClipboardList,
+  FaBook,
+  FaChartLine,
+} from "react-icons/fa";
 const TeacherDashboard = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -80,13 +86,27 @@ const TeacherDashboard = () => {
           </div>
           <h1 className="text-lg font-semibold mt-2">Thando Academy</h1>
         </div>
-        <nav className="space-y-9 mt-6">
-          <Link to="/" className="block w-full text-left hover:text-indigo-300">Dashboard</Link>
-          <Link to="/studentpage" className="block w-full text-left hover:text-indigo-300">Students</Link>
-          <Link to="/attendance" className="block w-full text-left hover:text-indigo-300">Attendance</Link>
-          <Link to="/grades" className="block w-full text-left hover:text-indigo-300 font-semibold">Grades</Link>
-          <Link to="/performance" className="block w-full text-left hover:text-indigo-300">Performance</Link>
-        </nav>
+        <nav className="flex-1 p-6 space-y-6">
+        <Link to="/" className="flex items-center gap-3 text-lg hover:text-indigo-300">
+          <FaHome /> Dashboard
+        </Link>
+
+        <Link to="/studentpage" className="flex items-center gap-3 text-lg hover:text-indigo-300">
+          <FaUserGraduate /> Students
+        </Link>
+
+        <Link to="/attendance" className="flex items-center gap-3 text-lg hover:text-indigo-300">
+          <FaClipboardList /> Attendance
+        </Link>
+
+        <Link to="/grades" className="flex items-center gap-3 text-lg hover:text-indigo-300 font-semibold">
+          <FaBook /> Grades
+        </Link>
+
+        <Link to="/performance" className="flex items-center gap-3 text-lg hover:text-indigo-300">
+          <FaChartLine /> Performance
+        </Link>
+      </nav>
       </aside>
 
       {/* Main Content */}

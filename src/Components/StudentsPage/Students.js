@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import TeacherPhoto from "../Photos/TeacherPhoto.jpg";
 import Logo from "../Photos/Logo.jpg";
 import { FaBell, FaSearch, FaChevronDown } from "react-icons/fa";
 
@@ -11,7 +10,6 @@ const StudentPage = () => {
   const [teacher, setTeacher] = useState(null);
   const navigate = useNavigate();
 
-  // Get teacher from localStorage
   useEffect(() => {
     const storedTeacher = localStorage.getItem("teacher");
     if (storedTeacher) {
@@ -109,11 +107,22 @@ const StudentPage = () => {
               className="flex items-center gap-2 cursor-pointer"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
-              <img
-                src={TeacherPhoto}
-                alt="Teacher"
-                className="w-10 h-10 rounded-full object-cover border border-indigo-700"
-              />
+              {teacher?.photo ? (
+                <img
+                  src={teacher.photo}
+                  alt="Teacher"
+                  className="w-10 h-10 rounded-full object-cover border border-indigo-700"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-indigo-700 text-white font-bold flex items-center justify-center">
+                  {teacher?.full_name
+                    ?.split(" ")
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase() || "?"}
+                </div>
+              )}
               <span className="ml-2">
                 {teacher ? `Mr. ${getLastName()}` : "Loading..."}
               </span>
@@ -173,7 +182,6 @@ const StudentPage = () => {
               value={teacher?.class_assigned || ""}
               readOnly
               className="border px-3 py-2 rounded bg-gray-100 text-gray-600 cursor-not-allowed"
-              title="This class is assigned automatically"
             />
             <input name="parent" type="text" placeholder="Parent's Name" required className="border px-3 py-2 rounded" />
             <input name="contact" type="text" placeholder="Parent Contact" required className="border px-3 py-2 rounded" />

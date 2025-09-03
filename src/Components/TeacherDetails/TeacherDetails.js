@@ -6,6 +6,7 @@ import { FaBell, FaChevronDown } from "react-icons/fa";
 const TeacherDetailsPage = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [teacher, setTeacher] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,9 +34,45 @@ const TeacherDetailsPage = () => {
     navigate("/login");
   };
 
+  const handlePhotoClick = () => {
+    document.getElementById("photoInput").click();
+  };
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !teacher) return;
+
+    const formData = new FormData();
+    formData.append("photo", file);
+
+    try {
+      setUploading(true);
+      const response = await fetch(`http://localhost:5000/api/teachers/${teacher.id}/upload-photo`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const updatedTeacher = { ...teacher, photo: data.photo };
+        setTeacher(updatedTeacher);
+        localStorage.setItem("teacher", JSON.stringify(updatedTeacher));
+      } else {
+        alert(data.message || "Failed to upload photo.");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
       <aside className="w-64 bg-indigo-700 text-white p-6 space-y-6">
         <div className="flex flex-col items-center">
           <div className="border rounded-full w-[100px] h-[100px] border-white overflow-hidden">
@@ -52,9 +89,7 @@ const TeacherDetailsPage = () => {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 p-6 bg-gray-100">
-        {/* Header */}
         <header className="flex justify-between items-center mb-6 relative">
           <h2 className="text-xl font-bold">Teacher Dashboard</h2>
           <div className="relative">
@@ -69,18 +104,14 @@ const TeacherDetailsPage = () => {
                   className="w-10 h-10 rounded-full object-cover border border-indigo-700"
                 />
               ) : (
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-700 text-white font-bold"
-                >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-700 text-white font-bold">
                   {getInitials()}
                 </div>
               )}
               <span className="ml-2">
                 {teacher ? `Mr. ${getLastName()}` : "Loading..."}
               </span>
-              <FaChevronDown
-                className={`text-indigo-700 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
-              />
+              <FaChevronDown className={`text-indigo-700 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} />
               <FaBell className="text-indigo-700 ml-3" />
             </div>
 
@@ -104,23 +135,35 @@ const TeacherDetailsPage = () => {
           </div>
         </header>
 
-        {/* Teacher Details Card */}
         <section className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-4xl mx-auto">
           <h2 className="text-2xl font-semibold mb-6 text-gray-800">Teacher Details</h2>
-
           {teacher ? (
             <div className="flex gap-10">
-              {teacher.photo ? (
-                <img
-                  src={teacher.photo}
-                  alt="Teacher"
-                  className="w-36 h-36 object-cover rounded-md border border-gray-300"
-                />
-              ) : (
-                <div className="w-36 h-36 bg-gray-300 rounded-md flex items-center justify-center text-gray-600">
-                  <span>Photo Not Available</span>
-                </div>
-              )}
+              <div onClick={handlePhotoClick} className="cursor-pointer relative group">
+                {uploading && (
+                  <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                    <span className="text-gray-700">Uploading...</span>
+                  </div>
+                )}
+                {teacher.photo ? (
+                  <img
+                    src={teacher.photo}
+                    alt="Teacher"
+                    className="w-36 h-36 object-cover rounded-md border border-gray-300 group-hover:opacity-75"
+                  />
+                ) : (
+                  <div className="w-36 h-36 bg-gray-300 rounded-md flex items-center justify-center text-gray-600">
+                    <span>Click to Upload</span>
+                  </div>
+                )}
+              </div>
+              <input
+                type="file"
+                id="photoInput"
+                className="hidden"
+                accept="image/*"
+                onChange={handlePhotoChange}
+              />
               <div className="space-y-3 text-gray-700 text-lg">
                 <p><strong>Full Name:</strong> {teacher.full_name}</p>
                 <p><strong>Subject:</strong> {teacher.subject}</p>

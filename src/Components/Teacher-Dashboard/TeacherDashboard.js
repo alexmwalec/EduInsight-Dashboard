@@ -130,7 +130,7 @@ const TeacherDashboard = () => {
                 </div>
               )}
               <span className="ml-2">
-                {teacher ? `Mr. ${getLastName()}` : "Loading..."}
+                {teacher ? `${getLastName()}` : " "}
               </span>
               <FaChevronDown
                 className={`text-indigo-700 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}

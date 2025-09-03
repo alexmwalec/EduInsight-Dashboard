@@ -26,17 +26,17 @@ ChartJS.register(LineElement, BarElement, CategoryScale, LinearScale, PointEleme
 
 // Chart Data
 const lineData = {
-  labels: ["Week 3", "Week 5", "Week 7", "Week 9"],
+  labels: ["Week 3", "Week 5", "Week 7", "Week 9" , "Week 11"],
   datasets: [
     {
-      label: "Boys - Math",
-      data: [62, 65, 67, 70],
+      label: "Boys",
+      data: [62, 70, 67, 70],
       borderColor: "#3b82f6",
       backgroundColor: "#3b82f6",
       tension: 0.3,
     },
     {
-      label: "Girls - Math",
+      label: "Girls",
       data: [70, 74, 77, 67],
       borderColor: "#ec4899",
       backgroundColor: "#ec4899",
@@ -84,12 +84,11 @@ const PerformancePage = () => {
       .toUpperCase();
   };
 
-  const handleLogout = () => {
+  const handleLogout =()=>{
     localStorage.removeItem("teacher");
-    localStorage.removeItem("token");
+    localStorage.removeItem("tokens");
     navigate("/login");
   };
-
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}

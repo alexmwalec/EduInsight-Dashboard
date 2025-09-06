@@ -196,8 +196,7 @@ const TeacherDashboard = () => {
 
         {/* Performance & Calendar */}
         <section className="grid grid-cols-2 gap-6">
-         
-          <div className="bg-white p-4 rounded shadow">
+            <div className="bg-white p-4 rounded shadow">
             <h3 className="font-semibold mb-2">Calendar</h3>
             <Calendar />
           </div>

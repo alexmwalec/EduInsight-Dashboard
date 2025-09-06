@@ -1,37 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaBell, FaChevronDown, FaHome, FaUserGraduate, FaClipboardList, FaBook, FaChartLine } from "react-icons/fa";
+import {
+  FaBell,
+  FaChevronDown,
+  FaHome,
+  FaUserGraduate,
+  FaClipboardList,
+  FaBook,
+  FaChartLine,
+} from "react-icons/fa";
 import Logo from "../Photos/Logo.jpg";
+import axios from "axios";
 
-const GradePage = () => {
+const GradesPage = () => {
   const [grades, setGrades] = useState([]);
-  const [form, setForm] = useState({ name: "", score: "" });
+  const [form, setForm] = useState({ name: "", score: "", week: 1 });
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [teacher, setTeacher] = useState(null);
-  const [message, setMessage] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
-  // Fetch teacher info and grades
   useEffect(() => {
     const storedTeacher = localStorage.getItem("teacher");
     if (storedTeacher) {
-      const parsedTeacher = JSON.parse(storedTeacher);
-      setTeacher(parsedTeacher);
-      fetchGrades(parsedTeacher.class_assigned);
+      const t = JSON.parse(storedTeacher);
+      setTeacher(t);
+      fetchGrades(t.class_assigned);
     }
   }, []);
 
   const fetchGrades = async (class_assigned) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/grades/class?class_assigned=${class_assigned}`);
-      const data = await res.json();
-      setGrades(data);
+      const res = await axios.get(
+        `http://localhost:5000/api/grades/class?class_assigned=${class_assigned}`
+      );
+      setGrades(res.data);
     } catch (err) {
-      console.error("Error fetching grades:", err);
+      console.error(err);
     }
   };
 
-  // Utility functions
   const getLastName = () => {
     if (!teacher) return "";
     const parts = teacher.full_name.trim().split(" ");
@@ -41,7 +49,7 @@ const GradePage = () => {
   const getInitials = () => {
     if (!teacher) return "";
     const parts = teacher.full_name.trim().split(" ");
-    return parts.map(p => p[0]).join("").toUpperCase().slice(0, 2);
+    return parts.map((p) => p[0]).join("").toUpperCase().slice(0, 2);
   };
 
   const handleLogout = () => {
@@ -50,68 +58,46 @@ const GradePage = () => {
     navigate("/login");
   };
 
-  // Form handlers
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
+    setErrorMsg("");
 
     if (!form.name || !form.score || !teacher?.class_assigned || !teacher?.subject) {
-      setMessage("All fields are required");
+      setErrorMsg("All fields are required");
       return;
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/grades", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          student_name: form.name,
-          subject: teacher.subject,
-          score: parseFloat(form.score),
-          class_assigned: teacher.class_assigned
-        })
+      const res = await axios.post("http://localhost:5000/api/grades", {
+        student_name: form.name,
+        subject: teacher.subject,
+        score: parseFloat(form.score),
+        class_assigned: teacher.class_assigned,
+        week: parseInt(form.week) || 1,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setMessage(data.error || "Failed to submit grade");
-        return;
-      }
-
-      setGrades(prev => [...prev, data]);
-      setForm({ name: "", score: "" });
-      setMessage("");
+      setGrades((prev) => [...prev, res.data]);
+      setForm({ name: "", score: "", week: 1 });
     } catch (err) {
-      console.error("Error submitting grade:", err);
-      setMessage("Server error");
+      if (err.response?.data?.error) {
+        setErrorMsg(err.response.data.error); // e.g., "Student does not exist in your class"
+      } else {
+        console.error(err);
+        setErrorMsg("Failed to submit grade");
+      }
     }
   };
 
-  // Delete grade
-  const handleDelete = async (student_name, subject, class_assigned) => {
-    setMessage("");
+  const handleDelete = async (id) => {
     try {
-      const res = await fetch("http://localhost:5000/api/grades", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ student_name, subject, class_assigned })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setMessage(data.error || "Failed to delete grade");
-        return;
-      }
-
-      setMessage(data.message || "");
-      fetchGrades(class_assigned);
+      await axios.delete(`http://localhost:5000/api/grades/${id}`);
+      setGrades((prev) => prev.filter((g) => g.id !== id));
     } catch (err) {
-      console.error("Error deleting grade:", err);
-      setMessage("Server error");
+      console.error(err);
     }
   };
 
@@ -126,11 +112,21 @@ const GradePage = () => {
           <h1 className="text-lg font-semibold mt-2">Thando Academy</h1>
         </div>
         <nav className="flex-1 p-6 space-y-6">
-          <Link to="/" className="flex items-center gap-3 text-lg hover:text-indigo-300"><FaHome /> Dashboard</Link>
-          <Link to="/studentpage" className="flex items-center gap-3 text-lg hover:text-indigo-300"><FaUserGraduate /> Students</Link>
-          <Link to="/attendance" className="flex items-center gap-3 text-lg hover:text-indigo-300"><FaClipboardList /> Attendance</Link>
-          <Link to="/grades" className="flex items-center gap-3 text-lg hover:text-indigo-300 font-semibold"><FaBook /> Grades</Link>
-          <Link to="/performance" className="flex items-center gap-3 text-lg hover:text-indigo-300"><FaChartLine /> Performance</Link>
+          <Link to="/" className="flex items-center gap-3 text-lg hover:text-indigo-300">
+            <FaHome /> Dashboard
+          </Link>
+          <Link to="/studentpage" className="flex items-center gap-3 text-lg hover:text-indigo-300">
+            <FaUserGraduate /> Students
+          </Link>
+          <Link to="/attendance" className="flex items-center gap-3 text-lg hover:text-indigo-300">
+            <FaClipboardList /> Attendance
+          </Link>
+          <Link to="/grades" className="flex items-center gap-3 text-lg hover:text-indigo-300 font-semibold">
+            <FaBook /> Grades
+          </Link>
+          <Link to="/performance" className="flex items-center gap-3 text-lg hover:text-indigo-300">
+            <FaChartLine /> Performance
+          </Link>
         </nav>
       </aside>
 
@@ -147,30 +143,34 @@ const GradePage = () => {
               <FaChevronDown className={`text-indigo-700 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} />
               <FaBell className="text-indigo-700 ml-3" />
             </div>
-
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-50">
-                <Link to="/teacherdetails" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setDropdownOpen(false)}>Teacher Details</Link>
-                <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Logout</button>
+                <Link to="/teacherdetails" className="block px-4 py-2 text-gray-700 hover:bg-gray-100" onClick={() => setDropdownOpen(false)}>
+                  Teacher Details
+                </Link>
+                <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">
+                  Logout
+                </button>
               </div>
             )}
           </div>
         </header>
 
-        {/* Message */}
-       
-
-        {/* Grade Entry Form */}
+        {/* Grade Form */}
         <section className="bg-white p-4 rounded-2xl shadow mb-8">
           <h2 className="text-lg font-semibold text-indigo-600 mb-4">Grades Section</h2>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {errorMsg && <p className="text-red-600 mb-2">{errorMsg}</p>}
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <input type="text" name="name" placeholder="Student Name" value={form.name} onChange={handleChange} className="border border-gray-300 p-2 rounded-md" />
             <input type="number" name="score" placeholder="Score" value={form.score} onChange={handleChange} className="border border-gray-300 p-2 rounded-md" />
-            <button type="submit" className="md:col-span-3 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Submit Grade</button>
+            <input type="number" name="week" placeholder="Week" value={form.week} onChange={handleChange} className="border border-gray-300 p-2 rounded-md" />
+            <button type="submit" className="md:col-span-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+              Submit Grade
+            </button>
           </form>
         </section>
 
-        {/* Grade Table */}
+        {/* Grades Table */}
         <section className="bg-white p-4 rounded-2xl shadow">
           <h2 className="text-lg font-semibold text-indigo-600 mb-4">Grades for {teacher?.subject}</h2>
           {grades.length > 0 ? (
@@ -179,16 +179,18 @@ const GradePage = () => {
                 <tr>
                   <th className="py-2 px-4">Student</th>
                   <th className="py-2 px-4">Score</th>
+                  <th className="py-2 px-4">Week</th>
                   <th className="py-2 px-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-gray-700">
-                {grades.map((g, idx) => (
-                  <tr key={idx} className="border-t">
+                {grades.map((g) => (
+                  <tr key={g.id || g.student_name+g.week}>
                     <td className="py-2 px-4">{g.student_name}</td>
                     <td className="py-2 px-4">{g.score}</td>
+                    <td className="py-2 px-4">{g.week}</td>
                     <td className="py-2 px-4">
-                      <button onClick={() => handleDelete(g.student_name, teacher.subject, teacher.class_assigned)} className="text-red-600 hover:underline">
+                      <button onClick={() => handleDelete(g.id)} className="text-red-600 hover:underline">
                         Delete
                       </button>
                     </td>
@@ -205,4 +207,4 @@ const GradePage = () => {
   );
 };
 
-export default GradePage;
+export default GradesPage;

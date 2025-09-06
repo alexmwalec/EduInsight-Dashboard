@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import StudentPieChart from "../StudentPieChart/StudentPieChart";
 import Logo from "../Photos/Logo.jpg";
-import PerformanceChart from "../PerformanceChart/PerformanceChart";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUser, FaBell, FaChevronDown } from "react-icons/fa";
 import {
@@ -197,13 +196,7 @@ const TeacherDashboard = () => {
 
         {/* Performance & Calendar */}
         <section className="grid grid-cols-2 gap-6">
-          <div className="bg-white p-4 rounded shadow">
-            <h3 className="font-semibold mb-2 text-indigo-700">Students Performance</h3>
-            <div className="h-48">
-              <PerformanceChart />
-            </div>
-          </div>
-
+         
           <div className="bg-white p-4 rounded shadow">
             <h3 className="font-semibold mb-2">Calendar</h3>
             <Calendar />
